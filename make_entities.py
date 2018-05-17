@@ -2,9 +2,18 @@
 """
 Get all props from wikidata and recreate them
 with equiv prop links to wikidata
+
+Usage:
+
+To make all properties in wikidata:
+./make_entities.py
+To make a specific list of QIDs and/or PIDs
+./make_entities.py P123,Q123,...
+
 """
 import traceback
 
+import sys
 from tqdm import tqdm
 from wikidataintegrator import wdi_core, wdi_login
 from initial_setup import create_property, create_item
@@ -124,7 +133,26 @@ def create_all_props():
         except Exception as e:
             print(prop)
             traceback.print_exc()
-            pass
+
+
+def make_entities(entities):
+    # entitites is a list of QIDs and/or PIDs
+    for entity in tqdm(entities):
+        try:
+            if entity.startswith("Q"):
+                create_item_from_qid(entity)
+            elif entity.startswith("P"):
+                create_property_from_pid(entity)
+            else:
+                print("Unknown ID: {}".format(entity))
+        except Exception:
+            print("Creation failed: {}".format(entity))
+            traceback.print_exc()
+
 
 if __name__ == "__main__":
-    create_all_props()
+    if len(sys.argv) == 1:
+        create_all_props()
+    else:
+        entities = sys.argv[1].split(",")
+        make_entities(entities)
