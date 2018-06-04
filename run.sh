@@ -2,7 +2,9 @@
 
 set -e
 
-source config.py
+USER="$(python -c 'import config;print(config.USER)')"
+PASS="$(python -c 'import config;print(config.PASS)')"
+TO_CREATE="$(python -c 'import config;print(config.TO_CREATE)')"
 
 wget -N https://raw.githubusercontent.com/wmde/wikibase-docker/master/docker-compose.yml
 
@@ -21,4 +23,4 @@ docker exec -it $ID php /var/www/html/maintenance/createAndPromote.php ${USER} $
 
 ./initial_setup.py
 
-./make_entities.py
+./make_entities.py $TO_CREATE
