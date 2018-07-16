@@ -14,10 +14,13 @@ To make a specific list of QIDs and/or PIDs
 import traceback
 
 import sys
+
+import time
 from tqdm import tqdm
 from wikidataintegrator import wdi_core, wdi_login
 from initial_setup import create_property, create_item
 from functools import lru_cache
+from more_itertools import chunked
 
 from config import WDQS_FRONTEND_PORT, WIKIBASE_PORT, USER, PASS, HOST
 
@@ -106,9 +109,8 @@ def create_property_from_uri(pid):
     # todo: finish
 
 
-def get_item_info(qid):
-    # given a qid, get the label, description, aliases, and list of equiv classes from wikidata
-    item = wdi_core.WDItemEngine(wd_item_id=qid)
+def get_item_info(item):
+    # given an item, get the label, description, aliases, and list of equiv classes from wikidata
     equiv_class_statements = [x for x in item.statements if x.get_prop_nr() == 'P1709']
     return {'label': item.get_label(),
             'description': item.get_description(),
@@ -116,8 +118,23 @@ def get_item_info(qid):
             'equiv_classes': [x.get_value() for x in equiv_class_statements]}
 
 
+def get_item_info_from_qid(qid):
+    item = wdi_core.WDItemEngine(wd_item_id=qid)
+    return get_item_info(item)
+
+
+def create_item_from_wdi_item(item):
+    # create an item in a local wikibase from a WDI item instance
+    item_info = get_item_info(item)
+    label = item_info['label']
+    description = item_info['description']
+    equiv_classes = item_info['equiv_classes']
+    equiv_classes.append("http://www.wikidata.org/entity/{}".format(item.wd_item_id.upper()))
+    return create_item(label, description, equiv_classes, login)
+
+
 def create_item_from_qid(qid):
-    item_info = get_item_info(qid)
+    item_info = get_item_info_from_qid(qid)
     label = item_info['label']
     description = item_info['description']
     equiv_classes = item_info['equiv_classes']
@@ -137,17 +154,38 @@ def create_all_props():
 
 def make_entities(entities):
     # entitites is a list of QIDs and/or PIDs
-    for entity in tqdm(entities):
-        try:
-            if entity.startswith("Q"):
-                create_item_from_qid(entity)
-            elif entity.startswith("P"):
+    qids = set()
+    for entity in entities:
+        if entity.startswith("P"):
+            try:
                 create_property_from_pid(entity)
-            else:
-                print("Unknown ID: {}".format(entity))
-        except Exception:
-            print("Creation failed: {}".format(entity))
-            traceback.print_exc()
+            except Exception:
+                print("Creation failed: {}".format(entity))
+                traceback.print_exc()
+        elif entity.startswith("Q"):
+            qids.add(entity)
+        else:
+            print("Unknown ID: {}".format(entity))
+    chunks = chunked(sorted(qids), 50)
+    for chunk in tqdm(chunks, total=len(qids)/50):
+        items = dict(wdi_core.WDItemEngine.generate_item_instances(chunk)).values()
+        for item in tqdm(items):
+            try:
+                create_item_from_wdi_item(item)
+            except Exception:
+                print("Creation failed: {}".format(item.wd_item_id))
+                traceback.print_exc()
+
+
+# make entities from a result of a sparql query.
+# requires one variable in result, which is a list of qids
+def make_entities_from_sparql(query):
+    # example: all human genes
+    # query = "SELECT DISTINCT ?item WHERE { ?item wdt:P353 ?entrez . ?item wdt:P703 wd:Q15978631}"
+    df = wdi_core.WDItemEngine.execute_sparql_query(query, as_dataframe=True)
+    qids = list(df.iloc[:, 0])
+    qids = set(map(lambda x: x.replace("http://www.wikidata.org/entity/", ""), qids))
+    make_entities(qids)
 
 
 if __name__ == "__main__":
