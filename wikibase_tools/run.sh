@@ -23,4 +23,4 @@ docker exec -it $ID php /var/www/html/maintenance/createAndPromote.php ${USER} $
 
 ./initial_setup.py
 
-./make_entities.py $TO_CREATE
+./make_entities_script.py $TO_CREATE
