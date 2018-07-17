@@ -11,18 +11,15 @@ To make a specific list of QIDs and/or PIDs
 ./make_entities.py P123,Q123,...
 
 """
-import traceback
-
 import sys
-
-import time
+import traceback
 from tqdm import tqdm
 from wikidataintegrator import wdi_core, wdi_login
-from initial_setup import create_property, create_item
 from functools import lru_cache
 from more_itertools import chunked
 
-from config import WDQS_FRONTEND_PORT, WIKIBASE_PORT, USER, PASS, HOST
+from wikibase_tools.initial_setup import create_property, create_item
+from wikibase_tools.config import WDQS_FRONTEND_PORT, WIKIBASE_PORT, USER, PASS, HOST
 
 mediawiki_api_url = "http://{}:{}/w/api.php".format(HOST, WIKIBASE_PORT)
 sparql_endpoint_url = "http://{}:{}/proxy/wdqs/bigdata/namespace/wdq/sparql".format(HOST, WDQS_FRONTEND_PORT)

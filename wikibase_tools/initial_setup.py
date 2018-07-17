@@ -11,7 +11,7 @@ import time
 from wikidataintegrator import wdi_core, wdi_login, wdi_property_store
 wdi_property_store.wd_properties = dict()
 
-from config import WDQS_FRONTEND_PORT, WIKIBASE_PORT, USER, PASS, HOST
+from wikibase_tools.config import WDQS_FRONTEND_PORT, WIKIBASE_PORT, USER, PASS, HOST
 
 mediawiki_api_url = "http://{}:{}/w/api.php".format(HOST, WIKIBASE_PORT)
 sparql_endpoint_url = "http://{}:{}/proxy/wdqs/bigdata/namespace/wdq/sparql".format(HOST, WDQS_FRONTEND_PORT)

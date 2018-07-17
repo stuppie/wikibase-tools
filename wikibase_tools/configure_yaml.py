@@ -6,7 +6,7 @@ Overwrites `file` in place
 """
 
 import yaml
-from config import WIKIBASE_PORT, WDQS_FRONTEND_PORT, PROXY_PORT, WIKIBASE_ALIAS
+from wikibase_tools.config import WIKIBASE_PORT, WDQS_FRONTEND_PORT, PROXY_PORT, WIKIBASE_ALIAS
 import sys
 
 path = sys.argv[1]
