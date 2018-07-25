@@ -8,8 +8,8 @@ Create an "equivalent class" property, which equiv prop -> owl#equivalentClass
 
 """
 import time
-from wikidataintegrator import wdi_core, wdi_login, wdi_property_store
-wdi_property_store.wd_properties = dict()
+from wikidataintegrator import wdi_core, wdi_login
+CORE_PROPS = set()
 
 from wikibase_tools.config import WDQS_FRONTEND_PORT, WIKIBASE_PORT, USER, PASS, HOST
 
@@ -71,7 +71,7 @@ def get_quiv_class_pid():
 
 
 def create_property(label, description, property_datatype, equiv_props, login):
-    wdi_property_store.wd_properties[get_quiv_prop_pid()] = {'core_id': True}
+    CORE_PROPS.add(get_quiv_prop_pid())
     s = [wdi_core.WDUrl(equiv_prop, get_quiv_prop_pid()) for equiv_prop in equiv_props]
     item = localItemEngine(item_name=label, domain="foo", data=s)
     item.set_label(label)
@@ -81,7 +81,7 @@ def create_property(label, description, property_datatype, equiv_props, login):
 
 
 def create_item(label, description, equiv_classes, login):
-    wdi_property_store.wd_properties[get_quiv_class_pid()] = {'core_id': True}
+    CORE_PROPS.add(get_quiv_class_pid())
     s = [wdi_core.WDUrl(equiv_class, get_quiv_class_pid()) for equiv_class in equiv_classes]
     item = localItemEngine(item_name=label, domain="foo", data=s)
     item.set_label(label)

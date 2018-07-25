@@ -15,9 +15,9 @@ m.create_item_from_qid("Q42")
 """
 import traceback
 from tqdm import tqdm
-from wikidataintegrator import wdi_core, wdi_login, wdi_property_store
+from wikidataintegrator import wdi_core, wdi_login
 
-wdi_property_store.wd_properties = dict()
+CORE_PROPS = set()
 from functools import lru_cache
 from more_itertools import chunked
 
@@ -85,7 +85,7 @@ class EntityMaker:
         return pid
 
     def create_item(self, label, description, equiv_classes, login):
-        wdi_property_store.wd_properties[self.get_quiv_class_pid()] = {'core_id': True}
+        CORE_PROPS.add(self.get_quiv_class_pid())
         s = [wdi_core.WDUrl(equiv_class, self.get_quiv_class_pid()) for equiv_class in equiv_classes]
         item = self.localItemEngine(item_name=label, domain="foo", data=s)
         item.set_label(label)
@@ -94,7 +94,7 @@ class EntityMaker:
         return item
 
     def create_property(self, label, description, property_datatype, equiv_props, login):
-        wdi_property_store.wd_properties[self.get_quiv_prop_pid()] = {'core_id': True}
+        CORE_PROPS.add(self.get_quiv_prop_pid())
         s = [wdi_core.WDUrl(equiv_prop, self.get_quiv_prop_pid()) for equiv_prop in equiv_props]
         item = self.localItemEngine(item_name=label, domain="foo", data=s)
         item.set_label(label)
